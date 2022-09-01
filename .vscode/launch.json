@@ -1,0 +1,56 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Simulate File",
+            "type": "python",
+            "request": "launch",
+            "program": "simulate.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}/server",
+            "args": [ "1", "uninformed", "coin-flip", "5", "precision"]
+        },
+        {
+            "name": "Python: Server File",
+            "type": "python",
+            "request": "launch",
+            "program": "api.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}/server"
+        },
+        {
+            "name": "Python: Data Preprocessing File",
+            "type": "python",
+            "request": "launch",
+            "program": "preprocessing.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}/server"
+        },
+        {
+            "name": "Python: Pickle to json",
+            "type": "python",
+            "request": "launch",
+            "program": "pkl2json.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}/server",
+            "args": ["sim"]
+        },
+        {
+            "name": "Python: Plot results",
+            "type": "python",
+            "request": "launch",
+            "program": "plot_results.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}/server",
+            "args": ["sim", "iter"]
+        }
+    ]
+}
