@@ -24,6 +24,8 @@ api = Api(app)
 logging.getLogger('flask_cors').level = logging.DEBUG
 
 TOTAL_SCENARIOS = 5
+SAMPLING_METHOD = 'RANDOM'
+# SAMPLING_METHOD = 'ACTIVELR'
 
 class User(object):
     def __init__(self):
@@ -268,7 +270,10 @@ class Import(Resource):
 
             # Calculate the mean and variance
             h['vio_pairs'] = set(tuple(vp) for vp in h['vio_pairs'])
-            mu = h['conf']      # h['conf'] = # tuples that satisfy FD / # tuples total
+
+            # todo: uncheck this previous
+            # mu = h['conf']      # h['conf'] = # tuples that satisfy FD / # tuples total
+            mu = 0.1
             if mu == 1:
                 mu = 0.99999
             variance = 0.0025   # hyperparameter
@@ -317,6 +322,12 @@ class Import(Resource):
         pickle.dump( current_iter, open(new_project_dir + '/current_iter.p', 'wb') )
         pickle.dump( fd_metadata[target_fd].vio_pairs, open(new_project_dir + '/X.p', 'wb') )
 
+
+        total_indices = set()
+        for fd in project_info['scenario']['hypothesis_space']:
+            total_indices |= set(fd['support'])
+        pickle.dump(total_indices, open(new_project_dir+'/unserved_indices.p', 'wb'))
+
         print('*** Metadata and objects initialized and saved ***')
 
         # Return information to the user
@@ -353,8 +364,14 @@ class Sample(Resource):
         X = pickle.load( open('./store/' + project_id + '/X.p', 'rb') ) # list of true violation pairs (vio pairs for target FD)
         
         # Build sample
-        s_out, sample_X = helpers.buildSample(data, X, sample_size, project_id, current_iter, start_time)
+        s_out, sample_X = helpers.buildSample(data, X, sample_size, project_id, current_iter, start_time, sampling_method=SAMPLING_METHOD)
         s_index = s_out.index
+
+        # open file containing the indices of unserved tuples, update it and dump
+        unserved_indices = pickle.load(open('./store/'+project_id+'/unserved_indices.p', 'rb'))
+        unserved_indices = list(set(unserved_indices)- set(s_index))
+        pickle.dump(unserved_indices, open('./store/'+project_id+'/unserved_indices.p', 'wb'))
+
         pickle.dump( s_index, open('./store/' + project_id + '/current_sample.p', 'wb') )
         pickle.dump( sample_X, open('./store/' + project_id + '/current_X.p', 'wb') )
 
@@ -439,8 +456,14 @@ class Feedback(Resource):
 
         # Build a new sample
         current_iter += 1
-        s_out, new_sample_X = helpers.buildSample(data, X, sample_size, project_id, current_iter, current_time)
+        s_out, new_sample_X = helpers.buildSample(data, X, sample_size, project_id, current_iter, current_time, sampling_method=SAMPLING_METHOD)
         s_index = s_out.index
+
+        # open file containing the indices of unserved tuples, update it and dump
+        unserved_indices = pickle.load(open('./store/'+project_id+'/unserved_indices.p', 'rb'))
+        unserved_indices = list(set(unserved_indices)- set(s_index))
+        pickle.dump(unserved_indices, open('./store/'+project_id+'/unserved_indices.p', 'wb'))
+
         pickle.dump( s_index, open('./store/' + project_id + '/current_sample.p', 'wb') )
         pickle.dump( new_sample_X, open('./store/' + project_id + '/current_X.p', 'wb') )
 
@@ -470,7 +493,7 @@ class Feedback(Resource):
         #     terminate = False
         # else:
         #     terminate = helpers.checkForTermination(project_id)
-        if current_iter > 15:
+        if current_iter > 15 or len(unserved_indices) == 0:
             msg = '[DONE]'
         else:
             msg = '[SUCCESS]: Saved feedback and built new sample.'
@@ -479,8 +502,6 @@ class Feedback(Resource):
         pickle.dump( current_iter, open('./store/' + project_id + '/current_iter.p', 'wb') )
         with open('./store/' + project_id + '/project_info.json', 'w') as f:
             json.dump(project_info, f)
-
-        print(new_sample_X)
         
         # Return information to the user
         response = {
@@ -602,5 +623,6 @@ api.add_resource(Resume, '/duo/api/resume')
 api.add_resource(PostInteraction, '/duo/api/post-interaction')
 api.add_resource(Done, '/duo/api/done')
 
+
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0')
+     app.run(debug=True, host='0.0.0.0')

@@ -3,6 +3,7 @@ import pickle
 import os
 from helpers import FDMeta
 from api import User
+from simulate import FDMetaUser
 import sys
 
 def pkl2jsonRecursive(run_type):
@@ -22,7 +23,7 @@ def pkl2jsonRecursive(run_type):
             if '.p' in f:
                 obj = pickle.load( open(path + project_id + '/' + f, 'rb') )
                 if type(obj) == dict:
-                    if f == 'fd_metadata.p':
+                    if f in ['fd_metadata.p', 'fd_metadata_user.p']:
                         for k in obj.keys():
                             obj[k] = obj[k].asdict()
                     elif f == 'interaction_metadata.p':
@@ -35,9 +36,16 @@ def pkl2jsonRecursive(run_type):
                     elif f == 'study_metrics.p':
                         for idx in obj.keys():
                             obj[idx] = [i.asdict() for i in obj[idx]]
-
                     with open(path + project_id + '/' + f.split('.')[0] + '.json', 'w') as fp:
                         json.dump(obj, fp, ensure_ascii=False, indent=4)
 
 if __name__ == '__main__':
+    # if sys.argv[1] == 'sim':
+    #     from simulate import FDMeta
+    # elif sys.argv[1] == 'real':
+    #     from helpers import FDMeta
+    # else:
+    #     raise Exception(f"Unknown run type: {sys.argv[1]} passed!!!")
     pkl2jsonRecursive(sys.argv[1])
+    
+

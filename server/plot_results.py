@@ -65,9 +65,9 @@ def plotResults(run_type, project_ids, x_axis):
     ax9.set_ylim([0, 1])
     ax10.set_ylim([0, 1])
 
+    pathstart = './docker-out/' if run_type == 'real' else './store/'
     for project_id in project_ids:
-        pathstart = './docker-out/' if run_type == 'real' else './store/'
-
+        print(f"ProjectID: {project_id}")
         with open(pathstart + project_id + '/study_metrics.json', 'r') as f:
             study_metrics = json.load(f)
         with open(pathstart + project_id + '/fd_metadata.json', 'r') as f:
@@ -96,7 +96,7 @@ def plotResults(run_type, project_ids, x_axis):
         with open(pathstart + project_id + '/study_metrics.json', 'w') as f:
             json.dump(study_metrics, f)
         with open(pathstart + project_id + '/fd_metadata.json', 'w') as f:
-            json.load(fd_metadata, f)
+            json.dump(fd_metadata, f)
 
         conf_distance, avg_conf_distance = calcConfDistance(fd_metadata, clean_h_space, interaction_metadata)
 
@@ -175,7 +175,7 @@ def plotResults(run_type, project_ids, x_axis):
         project_id = project_ids[0]
         path = './plots/' + project_id
     if not os.path.exists(path):
-        os.mkdir(path)
+        os.makedirs(path)
     fig1.savefig(path + '/st-err-precision.jpg')
     fig2.savefig(path + '/st-err-recall.jpg')
     fig3.savefig(path + '/st-err-f1.jpg')
@@ -189,4 +189,10 @@ def plotResults(run_type, project_ids, x_axis):
     plt.clf()
 
 if __name__ == '__main__':
-    plotResults(sys.argv[1], sys.argv[2:-1], sys.argv[-1])
+    pathstart = './docker-out/' if sys.argv[2] == 'real' else './store/'
+    project_ids = os.listdir(path=pathstart)
+    for project_id in project_ids:
+        plotResults(sys.argv[1], [project_id], sys.argv[2])
+    
+    plotResults(sys.argv[1], project_ids, sys.argv[2])
+    
